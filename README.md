@@ -1,7 +1,4 @@
-# Define a log file
-$logFile = "C:\temp\script_log.txt"
-
-# Function to log messages to both console and log file
+# Function to log messages to the console
 function Log-Message {
     param (
         [string]$message
@@ -9,7 +6,6 @@ function Log-Message {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logEntry = "$timestamp - $message"
     Write-Host $logEntry
-    Add-Content -Path $logFile -Value $logEntry
 }
 
 # Log start of script
