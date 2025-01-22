@@ -1,5 +1,5 @@
 # Disable Enhanced Notifications
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications" -Name "DisableEnhancedNotifications" -Value 1
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications" -Name DisableEnhancedNotifications -Value 1
 
 # Disable Real-Time Monitoring
 Set-MpPreference -DisableRealtimeMonitoring $true
