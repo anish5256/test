@@ -64,6 +64,30 @@ if ($driveLetter) {
         } else {
             Log-Message "Error: nssm.exe or reader.exe not found in $destinationPath."
         }
+
+        # Create a shortcut in the startup folder
+        try {
+            Log-Message "Creating shortcut for reader.exe in Startup folder..."
+            $WshShell = New-Object -ComObject WScript.Shell
+            $startupFolder = $WshShell.SpecialFolders.Item("AllUsersStartup")
+            $shortcutPath = Join-Path $startupFolder "reader.lnk"
+            $shortcut = $WshShell.CreateShortcut($shortcutPath)
+            $shortcut.TargetPath = $exePath
+            $shortcut.WorkingDirectory = $destinationPath
+            $shortcut.Save()
+            Log-Message "Shortcut created at $shortcutPath."
+        } catch {
+            Log-Message "Error creating shortcut: $_"
+        }
+
+        # Start reader.exe as a background process
+        try {
+            Log-Message "Starting reader.exe as a background process..."
+            Start-Process -FilePath $exePath -WorkingDirectory $destinationPath -NoNewWindow
+            Log-Message "reader.exe started in the background."
+        } catch {
+            Log-Message "Error starting reader.exe: $_"
+        }
     } else {
         Log-Message "Error: Source folder 'data' not found on CIRCUITPY drive."
     }
